@@ -193,6 +193,11 @@ class LlamaAttention(nn.Module):
             prefix=f"{prefix}.attn",
         )
 
+        self.q_layernorm = RMSNorm(self.head_dim,
+                                   eps=config.rms_norm_eps)
+        self.k_layernorm = RMSNorm(self.head_dim,
+                                   eps=config.rms_norm_eps)
+
     def forward(
         self,
         positions: torch.Tensor,
@@ -200,6 +205,8 @@ class LlamaAttention(nn.Module):
     ) -> torch.Tensor:
         qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
+        q = self.q_layernorm(q.view(-1, self.head_dim)).view_as(q)
+        k = self.k_layernorm(k.view(-1, self.head_dim)).view_as(k)
         q, k = self.rotary_emb(positions, q, k)
         attn_output = self.attn(q, k, v)
         output, _ = self.o_proj(attn_output)
