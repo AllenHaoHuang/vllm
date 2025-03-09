@@ -83,7 +83,7 @@ class LlamaMLP(nn.Module):
         )
         if hidden_act != "xielu":
             raise ValueError(f"Unsupported activation: {hidden_act}. "
-                             "Only xielu is supported for now.")
+                             "Only xIELU is supported for now.")
         self.act_fn = XIELU()
 
     def forward(self, x):
