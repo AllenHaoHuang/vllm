@@ -32,7 +32,7 @@ from vllm.attention import Attention
 from vllm.compilation.decorators import support_torch_compile
 from vllm.config import CacheConfig, VllmConfig
 from vllm.distributed import get_pp_group, get_tensor_model_parallel_world_size
-from vllm.model_executor.layers.activation import SiluAndMul
+from vllm.model_executor.layers.activation import XIELU
 from vllm.model_executor.layers.layernorm import RMSNorm
 from vllm.model_executor.layers.linear import (MergedColumnParallelLinear,
                                                QKVParallelLinear,
@@ -69,7 +69,7 @@ class LlamaMLP(nn.Module):
         super().__init__()
         self.gate_up_proj = MergedColumnParallelLinear(
             input_size=hidden_size,
-            output_sizes=[intermediate_size] * 2,
+            output_sizes=intermediate_size,
             bias=bias,
             quant_config=quant_config,
             prefix=f"{prefix}.gate_up_proj",
@@ -81,10 +81,10 @@ class LlamaMLP(nn.Module):
             quant_config=quant_config,
             prefix=f"{prefix}.down_proj",
         )
-        if hidden_act != "silu":
+        if hidden_act != "xielu":
             raise ValueError(f"Unsupported activation: {hidden_act}. "
-                             "Only silu is supported for now.")
-        self.act_fn = SiluAndMul()
+                             "Only xielu is supported for now.")
+        self.act_fn = XIELU()
 
     def forward(self, x):
         x, _ = self.gate_up_proj(x)
