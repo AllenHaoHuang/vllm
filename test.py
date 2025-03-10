@@ -12,6 +12,7 @@ class ModelConfig:
 @dataclass
 class VllmConfig:
     model_config: ModelConfig  # Contains the Hugging Face config
+    cache_config: dict = None  # Add cache_config (required by LlamaModel)
     quant_config: dict = None  # Quantization config (optional)
     lora_config: dict = None  # LoRA config (optional)
 
@@ -43,6 +44,7 @@ def print_param_names(hf_checkpoint_path):
     hf_config = config.to_dict()  # Convert Hugging Face config to dict
     vllm_config = VllmConfig(
         model_config=ModelConfig(hf_config=hf_config),  # Wrap in ModelConfig
+        cache_config={},  # Add an empty cache_config (required)
         quant_config=None,  # Add quantization config if applicable
         lora_config=None,  # Add LoRA config if applicable
     )
