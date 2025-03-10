@@ -3380,7 +3380,7 @@ class VllmConfig:
     def __post_init__(self):
         """Verify configs are valid & consistent with each other.
         """
-        if self.model_config is not None:
+        # if self.model_config is not None:
             #self.model_config.verify_async_output_proc(self.parallel_config,
             #                                           self.speculative_config,
             #                                           self.device_config)
