@@ -2,6 +2,7 @@
 from transformers import SwissAIConfig, SwissAIModel
 from vllm.model_executor.models.swissai import SwissAIForCausalLM
 from vllm.config import ModelConfig, VllmConfig
+from vllm.distributed.parallel_state import initialize_model_parallel
 
 hf_checkpoint_path = '/iopsstor/scratch/cscs/ahuang/apertus3-1b-21n-600k'
 # Load the model configuration
@@ -11,6 +12,9 @@ model = SwissAIModel.from_pretrained(hf_checkpoint_path, config=config)
 # Print parameter names to debug
 for name, param in model.named_parameters():
         print(name)
+
+# Initialize model parallel environment
+initialize_model_parallel(tensor_model_parallel_size=1, pipeline_model_parallel_size=1)
 
 # Create a VLLM ModelConfig object without the 'model_type' parameter
 vllm_model_config = ModelConfig(
