@@ -1,7 +1,13 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoConfig
 from vllm.model_executor.models.apertus import LlamaForCausalLM
-from vllm.config import ModelConfig
+from dataclasses import dataclass
+
+@dataclass
+class VllmConfig:
+    model_config: dict
+    quant_config: dict = None
+    lora_config: dict = None
 
 def print_param_names(hf_checkpoint_path):
     """
@@ -27,18 +33,15 @@ def print_param_names(hf_checkpoint_path):
     # Load your custom vLLM model
     print("\nLoading Custom VLLM model")
     
-    # Create a properly configured ModelConfig with required parameters
-    vllm_config = ModelConfig(
-        model=hf_checkpoint_path,
-        task="generate",  # This was missing and is required
-        tokenizer=hf_checkpoint_path,
-        tokenizer_mode="auto",
-        trust_remote_code=False,
-        dtype="float16",
-        seed=42
+    # Create a custom VllmConfig
+    hf_config = config.to_dict()  # Convert Hugging Face config to dict
+    vllm_config = VllmConfig(
+        model_config={"hf_config": hf_config},  # Add Hugging Face config
+        quant_config=None,  # Add quantization config if applicable
+        lora_config=None,  # Add LoRA config if applicable
     )
     
-    # Initialize the model with just the vllm_config
+    # Initialize the model with the custom vllm_config
     vllm_model = LlamaForCausalLM(vllm_config=vllm_config)
     
     # Get VLLM parameter names
