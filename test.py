@@ -3,10 +3,11 @@ from transformers import SwissAIConfig, SwissAIModel
 from vllm.model_executor.models.swissai import SwissAIForCausalLM
 from vllm.config import ModelConfig, VllmConfig
 
+hf_checkpoint_path = '/iopsstor/scratch/cscs/ahuang/apertus3-1b-21n-600k'
 # Load the model configuration
-config = SwissAIConfig.from_pretrained('/iopsstor/scratch/cscs/ahuang/apertus3-1b-21n-600k')
+config = SwissAIConfig.from_pretrained(hf_checkpoint_path)
 # Load the model weights
-model = SwissAIModel.from_pretrained('/iopsstor/scratch/cscs/ahuang/apertus3-1b-21n-600k', config=config)
+model = SwissAIModel.from_pretrained(hf_checkpoint_path, config=config)
 # Print parameter names to debug
 for name, param in model.named_parameters():
         print(name)
