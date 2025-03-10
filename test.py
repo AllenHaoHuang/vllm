@@ -29,7 +29,15 @@ def print_param_names(hf_checkpoint_path):
     
     # Load your custom vLLM model
     print("\nLoading Custom VLLM Model")
-    vllm_config = ModelConfig(model=hf_checkpoint_path)  # Might need modifications
+    vllm_config = ModelConfig(
+        model=hf_checkpoint_path,
+        task="text-generation",
+        tokenizer=hf_checkpoint_path,  # Uses the HF checkpoint tokenizer
+        tokenizer_mode="auto",
+        trust_remote_code=False,
+        dtype="float16",
+        seed=42
+    )
     vllm_model = LlamaModel(vllm_config)  # Change to your custom model class
 
     # Get VLLM parameter names
@@ -37,5 +45,3 @@ def print_param_names(hf_checkpoint_path):
     print(f"\nFound {len(vllm_param_names)} parameters in Custom VLLM model")
     for name in vllm_param_names:
         print(name)
-
-print_param_names("/iopsstor/scratch/cscs/ahuang/apertus3-1b-21n-600k")
