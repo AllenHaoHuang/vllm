@@ -3,11 +3,17 @@ from transformers import AutoModelForCausalLM, AutoConfig
 from vllm.model_executor.models.apertus import LlamaForCausalLM
 from dataclasses import dataclass
 
+# Define a custom ModelConfig class
+@dataclass
+class ModelConfig:
+    hf_config: dict  # Hugging Face config as a dictionary
+
+# Define a custom VllmConfig class
 @dataclass
 class VllmConfig:
-    model_config: dict
-    quant_config: dict = None
-    lora_config: dict = None
+    model_config: ModelConfig  # Contains the Hugging Face config
+    quant_config: dict = None  # Quantization config (optional)
+    lora_config: dict = None  # LoRA config (optional)
 
 def print_param_names(hf_checkpoint_path):
     """
@@ -36,7 +42,7 @@ def print_param_names(hf_checkpoint_path):
     # Create a custom VllmConfig
     hf_config = config.to_dict()  # Convert Hugging Face config to dict
     vllm_config = VllmConfig(
-        model_config={"hf_config": hf_config},  # Add Hugging Face config
+        model_config=ModelConfig(hf_config=hf_config),  # Wrap in ModelConfig
         quant_config=None,  # Add quantization config if applicable
         lora_config=None,  # Add LoRA config if applicable
     )
