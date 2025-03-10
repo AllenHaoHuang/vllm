@@ -5,8 +5,8 @@ from vllm import LLM, SamplingParams
 checkpoint_path = "/iopsstor/scratch/cscs/ahuang/apertus3-1b-21n-600k"
 
 # Initialize the vLLM model
-# Replace "apertus" with the name of your custom model class in apertus.py
-llm = LLM(model="apertus", checkpoint=checkpoint_path)
+# Pass the checkpoint path directly to the `model` argument
+llm = LLM(model=checkpoint_path)
 
 # Define sampling parameters for generation
 sampling_params = SamplingParams(
