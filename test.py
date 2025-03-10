@@ -1,6 +1,7 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoConfig
 from vllm.model_executor.models.apertus import LlamaForCausalLM
+from vllm.distributed.parallel_state import initialize_model_parallel
 from dataclasses import dataclass
 
 # Define a custom ModelConfig class
@@ -39,6 +40,12 @@ def print_param_names(hf_checkpoint_path):
     
     # Load your custom vLLM model
     print("\nLoading Custom VLLM model")
+    
+    # Initialize distributed environment
+    torch.distributed.init_process_group(backend="nccl")
+    
+    # Initialize pipeline parallelism
+    initialize_model_parallel()
     
     # Create a custom VllmConfig
     vllm_config = VllmConfig(
