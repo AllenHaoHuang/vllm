@@ -1,27 +1,36 @@
-import torch
-from vllm import LLM, SamplingParams
 
-# Define the path to your Hugging Face checkpoint
-checkpoint_path = "/iopsstor/scratch/cscs/ahuang/apertus3-1b-21n-600k"
+from transformers import SwissAIConfig, SwissAIModel
+from vllm.model_executor.models.swissai import SwissAIForCausalLM
+from vllm.config import ModelConfig, VllmConfig
 
-# Initialize the vLLM model
-# Pass the checkpoint path directly to the `model` argument
-llm = LLM(model=checkpoint_path)
+# Load the model configuration
+config = SwissAIConfig.from_pretrained('/iopsstor/scratch/cscs/ahuang/apertus3-1b-21n-600k')
+# Load the model weights
+model = SwissAIModel.from_pretrained('/iopsstor/scratch/cscs/ahuang/apertus3-1b-21n-600k', config=config)
+# Print parameter names to debug
+for name, param in model.named_parameters():
+        print(name)
 
-# Define sampling parameters for generation
-sampling_params = SamplingParams(
-    temperature=0.7,  # Controls randomness (lower = more deterministic)
-    top_p=0.9,       # Nucleus sampling (top-p) parameter
-    max_tokens=100,  # Maximum number of tokens to generate
+# Create a VLLM ModelConfig object using your HuggingFace config
+vllm_model_config = ModelConfig(
+    model_type="swissai",
+    hidden_size=config.hidden_size,
+    num_hidden_layers=config.num_hidden_layers,
+    num_attention_heads=config.num_attention_heads,
+    intermediate_size=config.intermediate_size,
+    hidden_act=config.hidden_act,
+    max_position_embeddings=config.max_position_embeddings,
+    vocab_size=config.vocab_size,
+    num_key_value_heads=config.num_key_value_heads,
+    rope_theta=config.rope_theta,
+    # Add other parameters as needed
 )
 
-# Define a prompt for testing
-prompt = "Hello, how are you?"
+# Now create VllmConfig with the appropriate ModelConfig object
+vllm_config = VllmConfig(
+    model_config=vllm_model_config,
+    cache_config=None,
+    quant_config=None
+)
 
-# Generate text using the model
-outputs = llm.generate(prompt, sampling_params)
-
-# Print the generated text
-for output in outputs:
-    print(f"Prompt: {prompt}")
-    print(f"Generated text: {output.outputs[0].text}")
+swissai_model = SwissAIForCausalLM(vllm_config=vllm_config)
