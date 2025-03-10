@@ -14,7 +14,7 @@ for name, param in model.named_parameters():
 
 # Create a VLLM ModelConfig object without the 'model_type' parameter
 vllm_model_config = ModelConfig(
-        model=config,
+        model=hf_checkpoint_path,
         task="generate",
         tokenizer=hf_checkpoint_path,  # Uses the HF checkpoint tokenizer
         tokenizer_mode="auto",
