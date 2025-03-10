@@ -193,10 +193,10 @@ class LlamaAttention(nn.Module):
             prefix=f"{prefix}.attn",
         )
 
-        self.q_layernorm = RMSNorm(self.head_dim,
-                                   eps=config.rms_norm_eps)
-        self.k_layernorm = RMSNorm(self.head_dim,
-                                   eps=config.rms_norm_eps)
+        self.q_norm = RMSNorm(self.head_dim,
+                              eps=config.rms_norm_eps)
+        self.k_norm = RMSNorm(self.head_dim,
+                              eps=config.rms_norm_eps)
 
     def forward(
         self,
@@ -205,8 +205,8 @@ class LlamaAttention(nn.Module):
     ) -> torch.Tensor:
         qkv, _ = self.qkv_proj(hidden_states)
         q, k, v = qkv.split([self.q_size, self.kv_size, self.kv_size], dim=-1)
-        q = self.q_layernorm(q.view(-1, self.head_dim)).view_as(q)
-        k = self.k_layernorm(k.view(-1, self.head_dim)).view_as(k)
+        q = self.q_norm(q.view(-1, self.head_dim)).view_as(q)
+        k = self.k_norm(k.view(-1, self.head_dim)).view_as(k)
         q, k = self.rotary_emb(positions, q, k)
         attn_output = self.attn(q, k, v)
         output, _ = self.o_proj(attn_output)
@@ -455,7 +455,7 @@ class LlamaForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
 
     # Mistral/Llama models can also be loaded with --load-format mistral
     # from consolidated.safetensors checkpoints
-    mistral_mapping = {
+    apertus_mapping = {
         "layers": "model.layers",
         "attention": "self_attn",
         "qscale_act": "input_scale",
@@ -559,12 +559,12 @@ class LlamaForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
                            if self.config.tie_word_embeddings else None),
         )
         return loader.load_weights(
-            self.maybe_remap_mistral(name, loaded_weight)
+            self.maybe_remap_apertus(name, loaded_weight)
             for name, loaded_weight in weights)
 
     # This function is used to remap the mistral format as
     # used by Mistral and Llama <=2
-    def maybe_remap_mistral(
+    def maybe_remap_apertus(
         self,
         name: str,
         loaded_weight: torch.Tensor,
@@ -577,7 +577,7 @@ class LlamaForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
             return w.view(n_heads, attn_in // n_heads // 2, 2,
                           attn_out).transpose(1, 2).reshape(attn_in, attn_out)
 
-        mapping = self.mistral_mapping
+        mapping = self.apertus_mapping
         modules = name.split(".")
 
         # rotary embeds should be sliced
