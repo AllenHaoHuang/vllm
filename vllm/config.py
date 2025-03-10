@@ -144,7 +144,7 @@ class ModelConfig:
             decoding draft models.
         quantization: Quantization method that was used to quantize the model
             weights. If None, we assume the model weights are not quantized.
-        enforce_eager: Whether to enforce eager execution. If True, we will
+        : Whether to enforce eager execution. If True, we will
             disable CUDA graph and always execute the model in eager mode.
             If False, we will use CUDA graph and eager execution in hybrid.
             If None, the user did not specify, so default to False.
@@ -240,7 +240,7 @@ class ModelConfig:
         max_model_len: Optional[int] = None,
         spec_target_max_model_len: Optional[int] = None,
         quantization: Optional[str] = None,
-        enforce_eager: Optional[bool] = None,
+        : Optional[bool] = None,
         max_seq_len_to_capture: Optional[int] = None,
         max_logprobs: int = 20,
         disable_sliding_window: bool = False,
@@ -3380,11 +3380,11 @@ class VllmConfig:
     def __post_init__(self):
         """Verify configs are valid & consistent with each other.
         """
-        # if self.model_config is not None:
-            #self.model_config.verify_async_output_proc(self.parallel_config,
-            #                                           self.speculative_config,
-            #                                           self.device_config)
-            # self.model_config.verify_with_parallel_config(self.parallel_config)
+        if self.model_config is not None:
+            self.model_config.verify_async_output_proc(self.parallel_config,
+                                                       self.speculative_config,
+                                                       self.device_config)
+            self.model_config.verify_with_parallel_config(self.parallel_config)
 
         if self.cache_config is not None:
             self.cache_config.verify_with_parallel_config(self.parallel_config)
