@@ -1,13 +1,32 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoConfig
 from vllm.model_executor.models.apertus import LlamaForCausalLM
-from vllm.config import ModelConfig
+from dataclasses import dataclass
 
 # Set the default device to CPU
 torch.device("cpu")
 
+# Define a custom ModelConfig class
+@dataclass
+class ModelConfig:
+    hf_config: object  # Hugging Face config as an object (PretrainedConfig)
+
+# Define a custom VllmConfig class
+@dataclass
+class VllmConfig:
+    model_config: ModelConfig  # Contains the Hugging Face config
+    cache_config: dict = None  # Add cache_config (required by LlamaModel)
+    quant_config: dict = None  # Add quantization config (optional)
+    lora_config: dict = None  # Add LoRA config (optional)
+
 def print_param_names(hf_checkpoint_path):
-    # Load Hugging Face model on CPU
+    """
+    Print all parameter names from a Hugging Face checkpoint and a custom VLLM model.
+    Args:
+        hf_checkpoint_path: Path to the Hugging Face checkpoint
+    """
+    print(f"Loading Hugging Face model from {hf_checkpoint_path}")
+    # Load the Hugging Face config and model
     config = AutoConfig.from_pretrained(hf_checkpoint_path)
     hf_model = AutoModelForCausalLM.from_pretrained(
         hf_checkpoint_path,
@@ -16,26 +35,27 @@ def print_param_names(hf_checkpoint_path):
         low_cpu_mem_usage=True
     ).to("cpu")  # Move model to CPU
 
-    # Print Hugging Face parameter names
+    # Get HF parameter names
     hf_param_names = sorted([name for name, _ in hf_model.named_parameters()])
     print(f"\nFound {len(hf_param_names)} parameters in Hugging Face model")
     for name in hf_param_names:
         print(name)
     
-    # Load custom vLLM model on CPU
+    # Load your custom vLLM model
     print("\nLoading Custom VLLM model")
-    vllm_config = ModelConfig(
-        model=hf_checkpoint_path,
-        task="generate",
-        tokenizer=hf_checkpoint_path,
-        tokenizer_mode="auto",
-        trust_remote_code=False,
-        dtype="float32",  # Use float32 instead of float16 for CPU
-        seed=42
+    
+    # Create a custom VllmConfig
+    vllm_config = VllmConfig(
+        model_config=ModelConfig(hf_config=config),  # Pass the Hugging Face config object
+        cache_config={},  # Add an empty cache_config (required)
+        quant_config=None,  # Add quantization config if applicable
+        lora_config=None,  # Add LoRA config if applicable
     )
+    
+    # Initialize the model with the custom vllm_config
     vllm_model = LlamaForCausalLM(vllm_config=vllm_config).to("cpu")  # Move model to CPU
     
-    # Print VLLM parameter names
+    # Get VLLM parameter names
     vllm_param_names = sorted([name for name, _ in vllm_model.named_parameters()])
     print(f"\nFound {len(vllm_param_names)} parameters in Custom VLLM model")
     for name in vllm_param_names:
