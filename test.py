@@ -6,7 +6,7 @@ from dataclasses import dataclass
 # Define a custom ModelConfig class
 @dataclass
 class ModelConfig:
-    hf_config: dict  # Hugging Face config as a dictionary
+    hf_config: object  # Hugging Face config as an object (PretrainedConfig)
 
 # Define a custom VllmConfig class
 @dataclass
@@ -41,9 +41,8 @@ def print_param_names(hf_checkpoint_path):
     print("\nLoading Custom VLLM model")
     
     # Create a custom VllmConfig
-    hf_config = config.to_dict()  # Convert Hugging Face config to dict
     vllm_config = VllmConfig(
-        model_config=ModelConfig(hf_config=hf_config),  # Wrap in ModelConfig
+        model_config=ModelConfig(hf_config=config),  # Pass the Hugging Face config object
         cache_config={},  # Add an empty cache_config (required)
         quant_config=None,  # Add quantization config if applicable
         lora_config=None,  # Add LoRA config if applicable
