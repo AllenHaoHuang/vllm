@@ -13,13 +13,7 @@ for name, param in model.named_parameters():
 
 # Create a VLLM ModelConfig object without the 'model_type' parameter
 vllm_model_config = ModelConfig(
-    hidden_size=config.hidden_size,
-    num_hidden_layers=config.num_hidden_layers,
-    num_attention_heads=config.num_attention_heads,
-    intermediate_size=config.intermediate_size,
-    max_position_embeddings=config.max_position_embeddings,
-    vocab_size=config.vocab_size,
-    # Add other necessary parameters from config
+    model=config
 )
 
 # Now create VllmConfig with the appropriate ModelConfig object
