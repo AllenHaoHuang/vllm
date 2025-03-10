@@ -1,17 +1,14 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoConfig
-from vllm.model_executor.models.apertus import LlamaModel
-from vllm.config import ModelConfig, VllmConfig, CacheConfig
-import os
-import json
+from vllm.model_executor.models.apertus import LlamaModel  # Change this to your custom model
+from vllm.config import ModelConfig
 
-def print_param_names(hf_checkpoint_path, vllm_model_path=None):
+def print_param_names(hf_checkpoint_path):
     """
-    Print all parameter names from a Hugging Face checkpoint and VLLM model.
+    Print all parameter names from a Hugging Face checkpoint and a custom VLLM model.
 
     Args:
         hf_checkpoint_path: Path to the Hugging Face checkpoint
-        vllm_model_path: Path to the VLLM model (optional)
     """
     print(f"Loading Hugging Face model from {hf_checkpoint_path}")
 
@@ -30,13 +27,15 @@ def print_param_names(hf_checkpoint_path, vllm_model_path=None):
     for name in hf_param_names:
         print(name)
     
-    if vllm_model_path:
-        print(f"\nLoading VLLM model from {vllm_model_path}")
-        vllm_config = ModelConfig(model=vllm_model_path)
-        vllm_model = LlamaModel(vllm_config)
+    # Load your custom vLLM model
+    print("\nLoading Custom VLLM Model")
+    vllm_config = ModelConfig(model=hf_checkpoint_path)  # Might need modifications
+    vllm_model = LlamaModel(vllm_config)  # Change to your custom model class
 
-        # Get VLLM parameter names
-        vllm_param_names = sorted([name for name, _ in vllm_model.named_parameters()])
-        print(f"\nFound {len(vllm_param_names)} parameters in VLLM model")
-        for name in vllm_param_names:
-            print(name)
+    # Get VLLM parameter names
+    vllm_param_names = sorted([name for name, _ in vllm_model.named_parameters()])
+    print(f"\nFound {len(vllm_param_names)} parameters in Custom VLLM model")
+    for name in vllm_param_names:
+        print(name)
+
+print_param_names("/iopsstor/scratch/cscs/ahuang/apertus3-1b-21n-600k")
