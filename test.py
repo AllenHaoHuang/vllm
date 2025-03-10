@@ -41,8 +41,9 @@ def print_param_names(hf_checkpoint_path):
     # Load your custom vLLM model
     print("\nLoading Custom VLLM model")
     
-    # Initialize distributed environment
-    torch.distributed.init_process_group(backend="nccl")
+    # Initialize distributed environment if not already initialized
+    if not torch.distributed.is_initialized():
+        torch.distributed.init_process_group(backend="nccl")
     
     # Initialize pipeline parallelism
     initialize_model_parallel()
