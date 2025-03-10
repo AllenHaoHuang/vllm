@@ -1,7 +1,7 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoConfig
 from vllm.model_executor.models.apertus import LlamaModel
-from vllm.config import ModelConfig, ParallelConfig
+from vllm.config import ModelConfig
 
 def print_param_names(hf_checkpoint_path):
     """
@@ -27,29 +27,18 @@ def print_param_names(hf_checkpoint_path):
     # Load your custom vLLM model
     print("\nLoading Custom VLLM model")
     
-    # First create the required config objects
-    model_config = config  # Use the HF config
-    parallel_config = ParallelConfig(
-        tensor_parallel_size=1,  # Adjust as needed
-        pipeline_parallel_size=1  # Adjust as needed
+    # Create a proper vLLM config - the error shows we should just pass this directly
+    vllm_config = ModelConfig(
+        model=hf_checkpoint_path,
+        tokenizer=hf_checkpoint_path,
+        tokenizer_mode="auto",
+        trust_remote_code=False,
+        dtype="float16",
+        seed=42
     )
     
-    # Create a proper vLLM config
-    vllm_config = {
-        "model": hf_checkpoint_path,
-        "tokenizer": hf_checkpoint_path,
-        "tokenizer_mode": "auto",
-        "trust_remote_code": False,
-        "dtype": "float16",
-        "seed": 42
-    }
-    
-    # Initialize the model with properly structured config
-    vllm_model = LlamaModel(
-        model_config=model_config,
-        parallel_config=parallel_config,
-        vllm_config=vllm_config
-    )
+    # Initialize the model with just the vllm_config
+    vllm_model = LlamaModel(vllm_config=vllm_config)
     
     # Get VLLM parameter names
     vllm_param_names = sorted([name for name, _ in vllm_model.named_parameters()])
