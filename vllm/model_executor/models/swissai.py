@@ -55,7 +55,7 @@ from .utils import (AutoWeightsLoader, PPMissingLayer, extract_layer_index,
                     maybe_prefix)
 
 
-class ApertusMLP(nn.Module):
+class SwissAIMLP(nn.Module):
 
     def __init__(
         self,
@@ -93,7 +93,7 @@ class ApertusMLP(nn.Module):
         return x
 
 
-class ApertusAttention(nn.Module):
+class SwissAIAttention(nn.Module):
 
     def __init__(self,
                  config: LlamaConfig,
@@ -157,7 +157,7 @@ class ApertusAttention(nn.Module):
 
         is_neox_style = True
         is_gguf = quant_config and quant_config.get_name() == "gguf"
-        if is_gguf and config.model_type == "apertus":
+        if is_gguf and config.model_type == "swissai":
             is_neox_style = False
 
         self.rotary_emb = get_rope(
@@ -213,7 +213,7 @@ class ApertusAttention(nn.Module):
         return output
 
 
-class ApertusDecoderLayer(nn.Module):
+class SwissAIDecoderLayer(nn.Module):
 
     def __init__(
         self,
@@ -241,7 +241,7 @@ class ApertusDecoderLayer(nn.Module):
         if hasattr(config, 'qkv_bias'):
             attention_bias = config.qkv_bias
 
-        self.self_attn = ApertusAttention(
+        self.self_attn = SwissAIAttention(
             config=config,
             hidden_size=self.hidden_size,
             num_heads=config.num_attention_heads,
@@ -256,7 +256,7 @@ class ApertusDecoderLayer(nn.Module):
             cache_config=cache_config,
             prefix=f"{prefix}.self_attn",
         )
-        self.mlp = ApertusMLP(
+        self.mlp = SwissAIMLP(
             hidden_size=self.hidden_size,
             intermediate_size=config.intermediate_size,
             hidden_act=config.hidden_act,
@@ -293,13 +293,13 @@ class ApertusDecoderLayer(nn.Module):
 
 
 @support_torch_compile
-class ApertusModel(nn.Module):
+class SwissAIModel(nn.Module):
 
     def __init__(self,
                  *,
                  vllm_config: VllmConfig,
                  prefix: str = "",
-                 layer_type: Type[ApertusDecoderLayer] = ApertusDecoderLayer):
+                 layer_type: Type[SwissAIDecoderLayer] = SwissAIDecoderLayer):
         super().__init__()
 
         config = vllm_config.model_config.hf_config
@@ -440,7 +440,7 @@ class ApertusModel(nn.Module):
         return loaded_params
 
 
-class ApertusForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
+class SwissAIForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
     packed_modules_mapping = {
         "qkv_proj": ["q_proj", "k_proj", "v_proj"],
         "gate_up_proj": ["gate_proj", "up_proj"]
@@ -455,7 +455,7 @@ class ApertusForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
 
     # Mistral/Llama models can also be loaded with --load-format mistral
     # from consolidated.safetensors checkpoints
-    apertus_mapping = {
+    swissai_mapping = {
         "layers": "model.layers",
         "attention": "self_attn",
         "qscale_act": "input_scale",
@@ -521,7 +521,7 @@ class ApertusForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
             self.model.make_empty_intermediate_tensors)
 
     def _init_model(self, vllm_config: VllmConfig, prefix: str = ""):
-        return ApertusModel(vllm_config=vllm_config, prefix=prefix)
+        return SwissAIModel(vllm_config=vllm_config, prefix=prefix)
 
     def get_input_embeddings(self, input_ids: torch.Tensor) -> torch.Tensor:
         return self.model.get_input_embeddings(input_ids)
@@ -559,12 +559,12 @@ class ApertusForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
                            if self.config.tie_word_embeddings else None),
         )
         return loader.load_weights(
-            self.maybe_remap_apertus(name, loaded_weight)
+            self.maybe_remap_swissai(name, loaded_weight)
             for name, loaded_weight in weights)
 
     # This function is used to remap the mistral format as
     # used by Mistral and Llama <=2
-    def maybe_remap_apertus(
+    def maybe_remap_swissai(
         self,
         name: str,
         loaded_weight: torch.Tensor,
@@ -577,7 +577,7 @@ class ApertusForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
             return w.view(n_heads, attn_in // n_heads // 2, 2,
                           attn_out).transpose(1, 2).reshape(attn_in, attn_out)
 
-        mapping = self.apertus_mapping
+        mapping = self.swissai_mapping
         modules = name.split(".")
 
         # rotary embeds should be sliced
