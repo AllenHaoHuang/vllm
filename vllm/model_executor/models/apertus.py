@@ -55,7 +55,7 @@ from .utils import (AutoWeightsLoader, PPMissingLayer, extract_layer_index,
                     maybe_prefix)
 
 
-class LlamaMLP(nn.Module):
+class ApertusMLP(nn.Module):
 
     def __init__(
         self,
@@ -93,7 +93,7 @@ class LlamaMLP(nn.Module):
         return x
 
 
-class LlamaAttention(nn.Module):
+class ApertusAttention(nn.Module):
 
     def __init__(self,
                  config: LlamaConfig,
@@ -157,7 +157,7 @@ class LlamaAttention(nn.Module):
 
         is_neox_style = True
         is_gguf = quant_config and quant_config.get_name() == "gguf"
-        if is_gguf and config.model_type == "llama":
+        if is_gguf and config.model_type == "apertus":
             is_neox_style = False
 
         self.rotary_emb = get_rope(
@@ -213,7 +213,7 @@ class LlamaAttention(nn.Module):
         return output
 
 
-class LlamaDecoderLayer(nn.Module):
+class ApertusDecoderLayer(nn.Module):
 
     def __init__(
         self,
@@ -241,7 +241,7 @@ class LlamaDecoderLayer(nn.Module):
         if hasattr(config, 'qkv_bias'):
             attention_bias = config.qkv_bias
 
-        self.self_attn = LlamaAttention(
+        self.self_attn = ApertusAttention(
             config=config,
             hidden_size=self.hidden_size,
             num_heads=config.num_attention_heads,
@@ -256,7 +256,7 @@ class LlamaDecoderLayer(nn.Module):
             cache_config=cache_config,
             prefix=f"{prefix}.self_attn",
         )
-        self.mlp = LlamaMLP(
+        self.mlp = ApertusMLP(
             hidden_size=self.hidden_size,
             intermediate_size=config.intermediate_size,
             hidden_act=config.hidden_act,
@@ -293,13 +293,13 @@ class LlamaDecoderLayer(nn.Module):
 
 
 @support_torch_compile
-class LlamaModel(nn.Module):
+class ApertusModel(nn.Module):
 
     def __init__(self,
                  *,
                  vllm_config: VllmConfig,
                  prefix: str = "",
-                 layer_type: Type[LlamaDecoderLayer] = LlamaDecoderLayer):
+                 layer_type: Type[ApertusDecoderLayer] = ApertusDecoderLayer):
         super().__init__()
 
         config = vllm_config.model_config.hf_config
@@ -440,7 +440,7 @@ class LlamaModel(nn.Module):
         return loaded_params
 
 
-class LlamaForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
+class ApertusForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
     packed_modules_mapping = {
         "qkv_proj": ["q_proj", "k_proj", "v_proj"],
         "gate_up_proj": ["gate_proj", "up_proj"]
@@ -521,7 +521,7 @@ class LlamaForCausalLM(nn.Module, SupportsLoRA, SupportsPP):
             self.model.make_empty_intermediate_tensors)
 
     def _init_model(self, vllm_config: VllmConfig, prefix: str = ""):
-        return LlamaModel(vllm_config=vllm_config, prefix=prefix)
+        return ApertusModel(vllm_config=vllm_config, prefix=prefix)
 
     def get_input_embeddings(self, input_ids: torch.Tensor) -> torch.Tensor:
         return self.model.get_input_embeddings(input_ids)
