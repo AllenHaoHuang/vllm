@@ -1,6 +1,6 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoConfig
-from vllm.model_executor.models.apertus import LlamaModel
+from vllm.model_executor.models.apertus import LlamaForCausalLM
 from vllm.config import ModelConfig
 
 def print_param_names(hf_checkpoint_path):
@@ -35,17 +35,11 @@ def print_param_names(hf_checkpoint_path):
         tokenizer_mode="auto",
         trust_remote_code=False,
         dtype="float16",
-        seed=42,
-        # Add other required parameters with default values
-        max_logprobs=20,
-        disable_sliding_window=False,
-        skip_tokenizer_init=False,
-        use_async_output_proc=True,
-        allowed_local_media_path=""
+        seed=42
     )
     
     # Initialize the model with just the vllm_config
-    vllm_model = LlamaModel(vllm_config=vllm_config)
+    vllm_model = LlamaForCausalLM(vllm_config=vllm_config)
     
     # Get VLLM parameter names
     vllm_param_names = sorted([name for name, _ in vllm_model.named_parameters()])
