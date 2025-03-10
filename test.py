@@ -27,14 +27,21 @@ def print_param_names(hf_checkpoint_path):
     # Load your custom vLLM model
     print("\nLoading Custom VLLM model")
     
-    # Create a proper vLLM config - the error shows we should just pass this directly
+    # Create a properly configured ModelConfig with required parameters
     vllm_config = ModelConfig(
         model=hf_checkpoint_path,
+        task="generate",  # This was missing and is required
         tokenizer=hf_checkpoint_path,
         tokenizer_mode="auto",
         trust_remote_code=False,
         dtype="float16",
-        seed=42
+        seed=42,
+        # Add other required parameters with default values
+        max_logprobs=20,
+        disable_sliding_window=False,
+        skip_tokenizer_init=False,
+        use_async_output_proc=True,
+        allowed_local_media_path=""
     )
     
     # Initialize the model with just the vllm_config
