@@ -30,7 +30,7 @@ class XIELU(CustomOp):
         self.alpha_p = nn.Parameter(torch.log(torch.exp(torch.tensor(alpha_p_init)) - 1.0).unsqueeze(0))
         self.alpha_n = nn.Parameter(torch.log(torch.exp(torch.tensor(alpha_n_init - beta)) - 1.0).unsqueeze(0))
         self.beta = beta
-        self.eps = torch.tensor(eps, dtype=torch.bfloat16, device='cuda')
+        self.eps = torch.tensor(eps, dtype=torch.float16, device='cuda')
 
         if current_platform.is_cuda_alike():
             # TODO CUDA implementation under development, using forward_native for now
